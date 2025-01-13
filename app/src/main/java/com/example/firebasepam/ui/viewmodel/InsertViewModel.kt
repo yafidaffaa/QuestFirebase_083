@@ -9,7 +9,21 @@ import com.example.firebasepam.model.Mahasiswa
 import com.example.firebasepam.repository.MahasiswaRepository
 import kotlinx.coroutines.launch
 
+class InsertViewModel(
+    private val mhs: MahasiswaRepository
+) : ViewModel(){
+    var uiEvent: InsertUiState by mutableStateOf(InsertUiState())
+        private set
+    var uiState: FormState by mutableStateOf(FormState.Idle)
+        private set
 
+    fun updateState(mahasiswaEvent: MahasiswaEvent) {
+        uiEvent = uiEvent.copy(
+            insertUiEvent = mahasiswaEvent,
+        )
+    }
+
+}
 
 
 sealed class FormState{
