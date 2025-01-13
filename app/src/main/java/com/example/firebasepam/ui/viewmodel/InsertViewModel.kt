@@ -11,6 +11,16 @@ import kotlinx.coroutines.launch
 
 
 
+data class MahasiswaEvent(
+    val nim: String = "",
+    val nama: String = "",
+    val alamat: String = "",
+    val jenisKelamin: String = "",
+    val kelas: String = "",
+    val angkatan: String = "",
+
+    )
+
 fun MahasiswaEvent.toMhsModel(): Mahasiswa = Mahasiswa(
     nim = nim,
     nama = nama,
