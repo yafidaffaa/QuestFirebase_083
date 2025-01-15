@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class InsertViewModel(
     private val mhs: MahasiswaRepository
-) : ViewModel(){
+) : ViewModel() {
     var uiEvent: InsertUiState by mutableStateOf(InsertUiState())
         private set
     var uiState: FormState by mutableStateOf(FormState.Idle)
@@ -22,6 +22,7 @@ class InsertViewModel(
             insertUiEvent = mahasiswaEvent,
         )
     }
+
     fun validateFields(): Boolean {
         val event = uiEvent.insertUiEvent
         val errorState = FormErrorState(
@@ -30,7 +31,11 @@ class InsertViewModel(
             jenisKelamin = if (event.jenisKelamin.isNotEmpty()) null else "Jenis Kelamin tidak boleh kosong",
             alamat = if (event.alamat.isNotEmpty()) null else "Alamat tidak boleh kosong",
             kelas = if (event.kelas.isNotEmpty()) null else "Kelas tidak boleh kosong",
-            angkatan = if (event.angkatan.isNotEmpty()) null else "Angkatan tidak boleh kosong"
+            angkatan = if (event.angkatan.isNotEmpty()) null else "Angkatan tidak boleh kosong",
+            judul_skripsi = if (event.angkatan.isNotEmpty()) null else "Judul skripsi tidak boleh kosong",
+            dosen_pembimbing1 = if (event.angkatan.isNotEmpty()) null else "DosPem 1 tidak boleh kosong",
+            dosen_pembimbing2 = if (event.angkatan.isNotEmpty()) null else "DosPem 2 tidak boleh kosong"
+
         )
         uiEvent = uiEvent.copy(isEntryValid = errorState)
         return errorState.isValid()
@@ -51,17 +56,19 @@ class InsertViewModel(
             uiState = FormState.Error("Data tidak valid")
         }
     }
-    fun resetForm(){
+
+    fun resetForm() {
         uiEvent = InsertUiState()
         uiState = FormState.Idle
     }
+
     fun resetSnackBarMessage() {
         uiState = FormState.Idle
     }
 }
 
 
-sealed class FormState{
+sealed class FormState {
     object Idle : FormState()
     object Loading : FormState()
     data class Success(val message: String) : FormState()
@@ -80,10 +87,13 @@ data class FormErrorState(
     val jenisKelamin: String? = null,
     val kelas: String? = null,
     val angkatan: String? = null,
+    val judul_skripsi: String? = null,
+    val dosen_pembimbing1: String? = null,
+    val dosen_pembimbing2: String? = null
 ) {
     fun isValid(): Boolean {
         return nim == null && nama == null && jenisKelamin == null
-                && alamat == null && kelas == null && angkatan == null
+                && alamat == null && kelas == null && angkatan == null && judul_skripsi == null && dosen_pembimbing1 == null && dosen_pembimbing2 == null
     }
 }
 
@@ -94,8 +104,10 @@ data class MahasiswaEvent(
     val jenisKelamin: String = "",
     val kelas: String = "",
     val angkatan: String = "",
-
-    )
+    val judul_skripsi: String = "",
+    val dosen_pembimbing1: String = "",
+    val dosen_pembimbing2: String = ""
+)
 
 fun MahasiswaEvent.toMhsModel(): Mahasiswa = Mahasiswa(
     nim = nim,
@@ -103,5 +115,9 @@ fun MahasiswaEvent.toMhsModel(): Mahasiswa = Mahasiswa(
     alamat = alamat,
     jenis_kelamin = jenisKelamin,
     kelas = kelas,
-    angkatan = angkatan
+    angkatan = angkatan,
+    judul_skripsi = judul_skripsi,
+    dosen_pembimbing1 = dosen_pembimbing1,
+    dosen_pembimbing2 = dosen_pembimbing2
+
 )

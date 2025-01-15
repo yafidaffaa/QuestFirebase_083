@@ -1,6 +1,7 @@
 package com.example.firebasepam.ui.view
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,10 +10,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -20,6 +27,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -27,6 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,8 +56,8 @@ fun InsertMhsView(
     modifier: Modifier = Modifier,
     viewModel: InsertViewModel = viewModel(factory = PenyediaViewModel.Factory)
 ) {
-    val uiState = viewModel.uiState // state utama untuk loading, success, error
-    val uiEvent = viewModel.uiEvent //state untuk form dan validasi
+    val uiState = viewModel.uiState
+    val uiEvent = viewModel.uiEvent
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -59,11 +68,11 @@ fun InsertMhsView(
                     "InsertMhsView: uiState is FormState.Success, navigate to home " + uiState.message
                 )
                 coroutineScope.launch {
-                    snackbarHostState.showSnackbar(uiState.message) //Tampilkan Snackbar
+                    snackbarHostState.showSnackbar(uiState.message)
                 }
                 delay(700)
                 onNavigate()
-                viewModel.resetSnackBarMessage() //reset snackbar state
+                viewModel.resetSnackBarMessage()
             }
 
             is FormState.Error -> {
@@ -79,10 +88,21 @@ fun InsertMhsView(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState)},
         topBar = {
             TopAppBar(
-                title = { Text("Tambah Mahasiswa")},
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Gray),
+                title = {
+                    Text(
+                        text = "Tambah Mahasiswa",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
-                    Button(onClick = onBack) {
-                        Text("Back")
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
                     }
                 }
             )
@@ -104,7 +124,6 @@ fun InsertMhsView(
                 onClick = {
                     if (viewModel.validateFields()) {
                         viewModel.insertMhs()
-                        //onNavigate()
                     }
                 }
             )
@@ -120,8 +139,12 @@ fun InsertBodyMhs(
     onClick: () -> Unit,
     homeUiState: FormState
 ) {
+    val scrollState = rememberScrollState()
+
     Column (
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(scrollState),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -145,7 +168,7 @@ fun InsertBodyMhs(
                 )
                 Text("Loading...")
             } else {
-                Text("Add")
+                Text("Simpan")
             }
         }
     }
@@ -274,6 +297,48 @@ fun FormMahasiswa(
         )
         Text(
             text = errorState.angkatan ?: "",
+            color = Color.Red
+        )
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = mahasiswaEvent.judul_skripsi,
+            onValueChange = {
+                onValueChange(mahasiswaEvent.copy(judul_skripsi = it))
+            },
+            label = {Text("Judul Skripsi")},
+            isError = errorState.judul_skripsi != null,
+            placeholder = { Text("Masukkan Judul Skripsi") }
+        )
+        Text(
+            text = errorState.judul_skripsi ?: "",
+            color = Color.Red
+        )
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = mahasiswaEvent.dosen_pembimbing1,
+            onValueChange = {
+                onValueChange(mahasiswaEvent.copy(dosen_pembimbing1 = it))
+            },
+            label = {Text("Dosen Pembimbing 1")},
+            isError = errorState.dosen_pembimbing1 != null,
+            placeholder = { Text("Masukkan Dosen Pembimbing 1") },
+        )
+        Text(
+            text = errorState.dosen_pembimbing1 ?: "",
+            color = Color.Red
+        )
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = mahasiswaEvent.dosen_pembimbing2,
+            onValueChange = {
+                onValueChange(mahasiswaEvent.copy(dosen_pembimbing2 = it))
+            },
+            label = {Text("Dosen Pembimbing 2")},
+            isError = errorState.dosen_pembimbing2 != null,
+            placeholder = { Text("Masukkan Dosen Pembimbing 2") },
+        )
+        Text(
+            text = errorState.dosen_pembimbing2 ?: "",
             color = Color.Red
         )
     }

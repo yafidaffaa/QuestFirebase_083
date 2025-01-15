@@ -12,46 +12,61 @@ class NetworkMahasiswaRepository(
     private val firestore: FirebaseFirestore
 ) : MahasiswaRepository {
     override suspend fun getMahasiswa(): Flow<List<Mahasiswa>> = callbackFlow {
-        val Mahasiswa = firestore.collection("Mahasiswa")
+        val subscription = firestore.collection("Mahasiswa")
             .orderBy("nama", Query.Direction.ASCENDING)
-            .addSnapshotListener { value, error ->
-                if (value != null) {
-                    val mhsList = value.documents.mapNotNull {
-                        it.toObject(Mahasiswa::class.java)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    try {
+                        val mhsList = snapshot.documents.mapNotNull {
+                            it.toObject(Mahasiswa::class.java)
+                        }
+                        trySend(mhsList)
+                    } catch (e: Exception) {
+                        close(e)
                     }
-                    trySend(mhsList) // trySend memiliki fungsi uuntuk mengirimkan data ke Flow
                 }
             }
         awaitClose {
-            Mahasiswa.remove()
+            subscription.remove()
         }
     }
 
     override suspend fun insertMahasiswa(mahasiswa: Mahasiswa) {
         try {
             firestore.collection("Mahasiswa")
-                .add(mahasiswa)
+                .document(mahasiswa.nim) // Gunakan NIM sebagai document ID
+                .set(mahasiswa)
                 .await()
         } catch (e: Exception) {
-            throw Exception("Gagal memanbah data mahasiswa: ${e.message}")
+            throw Exception("Gagal menambah data mahasiswa: ${e.message}")
         }
     }
 
     override suspend fun updateMahasiswa(mahasiswa: Mahasiswa) {
         try {
-            firestore.collection("Mahasiswa")
+            val docRef = firestore.collection("Mahasiswa")
                 .document(mahasiswa.nim)
-                .set(mahasiswa)
-                .await()
+
+            val doc = docRef.get().await()
+            if (!doc.exists()) {
+                throw Exception("Data mahasiswa tidak ditemukan")
+            }
+
+            docRef.set(mahasiswa).await()
         } catch (e: Exception) {
             throw Exception("Gagal mengupdate data mahasiswa: ${e.message}")
         }
     }
 
-    override suspend fun deleteMahasiswa(mahasiswa: Mahasiswa) {
+    override suspend fun deleteMahasiswa(mahasiswa: String) {
         try {
             firestore.collection("Mahasiswa")
-                .document(mahasiswa.nim)
+                .document(mahasiswa)
                 .delete()
                 .await()
         } catch (e: Exception) {
@@ -59,19 +74,32 @@ class NetworkMahasiswaRepository(
         }
     }
 
-    override suspend fun getMahasiswaById(nim: String): Flow<Mahasiswa> = callbackFlow{
-        val mhsDocument = firestore.collection("Mahasiswa")
+    override suspend fun getMahasiswaById(nim: String): Flow<Mahasiswa> = callbackFlow {
+        val subscription = firestore.collection("Mahasiswa")
             .document(nim)
-            .addSnapshotListener { value, error ->
-                if (value != null) {
-                    val mhs = value.toObject(Mahasiswa::class.java)!!
-                    trySend(mhs)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null && snapshot.exists()) {
+                    try {
+                        val mhs = snapshot.toObject(Mahasiswa::class.java)
+                        if (mhs != null) {
+                            trySend(mhs)
+                        } else {
+                            close(Exception("Gagal mengkonversi data mahasiswa"))
+                        }
+                    } catch (e: Exception) {
+                        close(e)
+                    }
+                } else {
+                    close(Exception("Data mahasiswa tidak ditemukan"))
                 }
             }
         awaitClose {
-            mhsDocument.remove()
-
+            subscription.remove()
         }
     }
-
 }

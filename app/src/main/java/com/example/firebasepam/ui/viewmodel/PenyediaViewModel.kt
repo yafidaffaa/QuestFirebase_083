@@ -17,6 +17,11 @@ object PenyediaViewModel {
                 MhsApplications().container.mahasiswaRepository
             )
         }
+        initializer {
+            DetailViewModel(
+                MhsApplications().container.mahasiswaRepository
+            )
+        }
     }
 }
 
